@@ -3,6 +3,7 @@ export interface Point {
   siteUuid: string;
   zoneUuid: string;
   usageUuid?: string;
+  postalCode: string;
   generalInformation: Required<GeneralInformation>;
 }
 

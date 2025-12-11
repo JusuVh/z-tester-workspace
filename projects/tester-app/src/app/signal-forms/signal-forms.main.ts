@@ -1,17 +1,19 @@
 import { JsonPipe } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-import { debounce, disabled, Field, form, required } from '@angular/forms/signals';
+import { debounce, disabled, Field, form, minLength, pattern, required, validate } from '@angular/forms/signals';
 import { EtcCard, EtcCardHeaderH2 } from '@datanumia/etincelle/card';
 import { EtcFormFieldModule } from '@datanumia/etincelle/form-field';
 import { EtcPageHeader } from '@datanumia/etincelle/page-header';
 import { Point, Resource } from './data.model';
+import { referenceId } from './signal-forms.validators';
 
 const getEmptyPoint = (): Required<Point> => ({
   uuid: crypto.randomUUID(),
   siteUuid: '',
   zoneUuid: '',
   usageUuid: '',
+  postalCode: '',
   generalInformation: {
     name: '',
     externalIdentifier: '',
@@ -29,15 +31,7 @@ const getEmptyPoint = (): Required<Point> => ({
   },
   templateUrl: 'signal-forms.main.html',
   styleUrl: 'signal-forms.main.scss',
-  imports: [
-    EtcCard,
-    EtcCardHeaderH2,
-    EtcFormFieldModule,
-    EtcPageHeader,
-    Field,
-    JsonPipe,
-    ReactiveFormsModule,
-  ]
+  imports: [EtcCard, EtcCardHeaderH2, EtcFormFieldModule, EtcPageHeader, Field, JsonPipe, ReactiveFormsModule],
 })
 export class SignalFormsMain {
   // 🎯 Create a signal with the initial model
@@ -46,12 +40,31 @@ export class SignalFormsMain {
   formDisabled = signal(false);
 
   // 🎯 NEW: Pass the signal directly to form() - it creates controls automatically!
-  pointForm = form(this.initialPoint, (schemaPath) => {
+  pointForm = form(this.initialPoint, schemaPath => {
     debounce(schemaPath.generalInformation.name, 500);
-    required(schemaPath.generalInformation.name);
+    required(schemaPath.generalInformation.name, { message: 'Required, message setup in validator' });
+
     required(schemaPath.siteUuid);
-    disabled(schemaPath.siteUuid)
-    disabled(schemaPath, () => this.formDisabled())
+    disabled(schemaPath.siteUuid);
+
+    debounce(schemaPath.zoneUuid, () => new Promise<void>(() => {}));
+    minLength(schemaPath.zoneUuid, 5, { message: 'Min 5' });
+
+    disabled(schemaPath, () => this.formDisabled());
+
+    pattern(schemaPath.postalCode, /^\d{5}$/, { message: 'Postal code must be 5 digits' });
+
+    validate(schemaPath.generalInformation.externalIdentifier, ({ value }) => {
+      if (!value().startsWith('EXT-')) {
+        return {
+          kind: 'externalIdPrefix',
+          message: 'externalIdentifier must start with EXT-',
+        };
+      }
+      return null;
+    });
+
+    referenceId(schemaPath.generalInformation.referenceIdentifier);
   });
 
   nameFieldState = this.pointForm.generalInformation.name();
@@ -99,11 +112,12 @@ export class SignalFormsMain {
       siteUuid: crypto.randomUUID(),
       zoneUuid: crypto.randomUUID(),
       usageUuid: crypto.randomUUID(),
+      postalCode: '01630',
       generalInformation: {
-        name: 'Main Distribution Point',
+        name: 'PDM conso',
         externalIdentifier: 'EXT-001',
         referenceIdentifier: 'REF-2024-001',
-        networkManager: 'Acme Networks',
+        networkManager: 'ENEDIS',
         resource: 'ELECTRICITY',
         quotationIdentifier: 'QUOT-2024-123',
       },

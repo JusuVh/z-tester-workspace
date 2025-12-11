@@ -16,14 +16,6 @@
           <input etc-input [field]="pointForm.uuid" />
         </etc-form-field>
 
-        <etc-form-field>
-          <etc-label>Site UUID</etc-label>
-          <input etc-input [field]="pointForm.siteUuid" />
-          @if (pointForm.siteUuid().invalid() && pointForm.siteUuid().touched()) {
-            <etc-error>Site UUID is required</etc-error>
-          }
-        </etc-form-field>
-
         <label>
           Site UUID:
           <input [field]="pointForm.siteUuid" />
@@ -33,13 +25,23 @@
         </label>
 
         <label>
-          Zone UUID:
+          Zone UUID ('on blur')
           <input [field]="pointForm.zoneUuid" placeholder="Optional" />
+          @if (pointForm.zoneUuid().invalid() && pointForm.zoneUuid().touched()) {
+            @for (error of pointForm.zoneUuid().errors(); track error.kind) {
+              <span class="error">{{ error.message }}</span>
+            }
+          }
         </label>
 
         <label>
-          Usage UUID:
-          <input [field]="pointForm.usageUuid" placeholder="Optional" />
+          Postal Code (pattern)
+          <input [field]="pointForm.postalCode" placeholder="Optional" />
+          @if (pointForm.postalCode().invalid() && pointForm.postalCode().touched()) {
+            @for (error of pointForm.postalCode().errors(); track error.kind) {
+              <span class="error">{{ error.message }}</span>
+            }
+          }
         </label>
       </fieldset>
 
@@ -50,7 +52,9 @@
           Name:
           <input [field]="pointForm.generalInformation.name" />
           @if (pointForm.generalInformation.name().invalid() && pointForm.generalInformation.name().touched()) {
-            <span class="error">Name is required</span>
+            @for (error of pointForm.generalInformation.name().errors(); track error.kind) {
+              <span class="error">{{ error.message }}</span>
+            }
           }
         </label>
 
@@ -69,36 +73,30 @@
 
         <label>
           External Identifier:
-          <input [field]="pointForm.generalInformation.externalIdentifier"
-                 placeholder="Optional" />
+          <input [field]="pointForm.generalInformation.externalIdentifier" placeholder="Optional" />
+          @if (pointForm.generalInformation.externalIdentifier().invalid() && pointForm.generalInformation.externalIdentifier().touched()) {
+            @for (error of pointForm.generalInformation.externalIdentifier().errors(); track error.kind) {
+              <span class="error">{{ error.message }}</span>
+            }
+          }
         </label>
 
         <label>
           Reference Identifier:
-          <input [field]="pointForm.generalInformation.referenceIdentifier"
-                 placeholder="Optional" />
+          <input [field]="pointForm.generalInformation.referenceIdentifier" placeholder="Optional" />
         </label>
 
         <label>
           Quotation Identifier:
-          <input [field]="pointForm.generalInformation.quotationIdentifier"
-                 placeholder="Optional" />
+          <input [field]="pointForm.generalInformation.quotationIdentifier" placeholder="Optional" />
         </label>
       </fieldset>
 
       <div class="actions">
-        <button type="button" (click)="fillSampleData()">
-          Fill Sample Data
-        </button>
-        <button type="button" (click)="resetForm()">
-          Reset
-        </button>
-        <button type="button" (click)="disableForm()" [disabled]="pointForm().disabled()">
-          Disable Form
-        </button>
-        <button type="button" (click)="enableForm()" [disabled]="!pointForm().disabled()">
-          Enable Form
-        </button>
+        <button type="button" (click)="fillSampleData()">Fill Sample Data</button>
+        <button type="button" (click)="resetForm()">Reset</button>
+        <button type="button" (click)="disableForm()" [disabled]="pointForm().disabled()">Disable Form</button>
+        <button type="button" (click)="enableForm()" [disabled]="!pointForm().disabled()">Enable Form</button>
       </div>
     </form>
 
@@ -149,5 +147,4 @@
       </div>
     </div>
   </div>
-
 </etc-card>

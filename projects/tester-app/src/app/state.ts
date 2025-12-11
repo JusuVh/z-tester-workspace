@@ -2,14 +2,14 @@ import { Injectable } from '@angular/core';
 import { FormControl } from '@angular/forms';
 import { EiIcon } from '@datanumia/etincelle-icons';
 
-export type Pin = {
+export interface Pin {
   x: number;
   y: number;
   color?: string;
   icon?: EiIcon;
 }
 
-@Injectable({providedIn: 'root'})
+@Injectable({ providedIn: 'root' })
 export class State {
   fc = new FormControl('');
 

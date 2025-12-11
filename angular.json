@@ -87,6 +87,15 @@
             "buildTarget": "tester-app:build"
           }
         },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "projects/tester-app/**/*.ts",
+              "projects/tester-app/**/*.html"
+            ]
+          }
+        },
         "test": {
           "builder": "@angular/build:karma",
           "options": {

@@ -1,10 +1,10 @@
-import { ChangeDetectionStrategy, Component, ViewEncapsulation } from '@angular/core';
+import { Component, ViewEncapsulation } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { EtcCardModule } from '@datanumia/etincelle/card';
 import { EtcPageHeaderModule } from '@datanumia/etincelle/page-header';
 import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
-import { of, timer } from 'rxjs';
+import { timer } from 'rxjs';
 
 @Component({
   selector: 'app-grid',
@@ -138,46 +138,43 @@ import { of, timer } from 'rxjs';
     class: 'etc-page-container',
   },
   standalone: true,
-  imports: [
-    EtcPageHeaderModule,
-    EtcCardModule,
-    EtcSelectableCardModule,
-    ReactiveFormsModule,
-  ],
+  imports: [EtcPageHeaderModule, EtcCardModule, EtcSelectableCardModule, ReactiveFormsModule],
   encapsulation: ViewEncapsulation.None,
 })
 export class GridComponent {
-  weeklySchedules: any[] = [];
+  weeklySchedules: Array<unknown> = [];
 
-  getWeeklySched = timer(3000).pipe(takeUntilDestroyed()).subscribe(() => {
-    this.weeklySchedules = [
-      {
-        'identifier': 'acbdb380-fe30-4c9e-a762-c1e71be6f79c',
-        'name': 'Inoccupé',
-        'description': 'Pour des pièces sans occupants',
-        'siteIdentifier': '17df96c3-3af7-4695-b1af-8c14279eaab2'
-      },
-      {
-        'identifier': 'b9c64255-1fa4-47e1-8529-42cd61870abd',
-        'name': 'Occupé',
-        'description': 'Pour des pièces avec occupants',
-        'siteIdentifier': '17df96c3-3af7-4695-b1af-8c14279eaab2'
-      },
-      {
-        'identifier': 'ec7ce351-3c18-4058-8e09-73a99f2033a0',
-        'name': 'Bureau',
-        'description': 'Pour des pièces de travail quotidiennes',
-        'siteIdentifier': '17df96c3-3af7-4695-b1af-8c14279eaab2'
-      }
-    ]
-  });
+  getWeeklySched = timer(3000)
+    .pipe(takeUntilDestroyed())
+    .subscribe(() => {
+      this.weeklySchedules = [
+        {
+          identifier: 'acbdb380-fe30-4c9e-a762-c1e71be6f79c',
+          name: 'Inoccupé',
+          description: 'Pour des pièces sans occupants',
+          siteIdentifier: '17df96c3-3af7-4695-b1af-8c14279eaab2',
+        },
+        {
+          identifier: 'b9c64255-1fa4-47e1-8529-42cd61870abd',
+          name: 'Occupé',
+          description: 'Pour des pièces avec occupants',
+          siteIdentifier: '17df96c3-3af7-4695-b1af-8c14279eaab2',
+        },
+        {
+          identifier: 'ec7ce351-3c18-4058-8e09-73a99f2033a0',
+          name: 'Bureau',
+          description: 'Pour des pièces de travail quotidiennes',
+          siteIdentifier: '17df96c3-3af7-4695-b1af-8c14279eaab2',
+        },
+      ];
+    });
 
   protected formRoomProgramming = new FormGroup({
     weeklyScheduleIdentifier: new FormControl<string | undefined>(undefined, { nonNullable: true }),
   });
 
   constructor() {
-    this.formRoomProgramming.setErrors({'toto': true});
+    this.formRoomProgramming.setErrors({ toto: true });
     setTimeout(() => {
       console.log('patched !');
       this.patch();

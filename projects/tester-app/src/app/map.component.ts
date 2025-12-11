@@ -1,7 +1,7 @@
 import { DialogRef } from '@angular/cdk/dialog';
 import { CdkDragEnd, DragDropModule, DragRef, Point } from '@angular/cdk/drag-drop';
 
-import { Component, ElementRef, HostListener, inject, ViewChild } from '@angular/core';
+import { Component, ElementRef, inject, ViewChild } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ReactiveFormsModule } from '@angular/forms';
 import { EiIcon, eiPlus, EtcIconsModule } from '@datanumia/etincelle-icons';
@@ -16,10 +16,13 @@ import { minmax } from './tools';
   selector: 'app-map',
   template: `
     <div style="display: flex; flex-direction: column; width: 100%;">
-      <div class="etc-shadow--primary" style="width: 100%; padding: 16px; background-color: white; display: flex; justify-content: space-between; z-index: 1;">
+      <div
+        class="etc-shadow--primary"
+        style="width: 100%; padding: 16px; background-color: white; display: flex; justify-content: space-between; z-index: 1;"
+      >
         <etc-form-field style="width: 500px;">
           <etc-label>Nouveau plan</etc-label>
-          <input etc-input placeholder="Floor image" [formControl]="state.fc"/>
+          <input etc-input placeholder="Floor image" [formControl]="state.fc" />
         </etc-form-field>
         @if (Array.from(state.floorMap.keys()).length > 0) {
           <etc-radio-group [value]="state.img" (selectionChange)="state.img = $event.value || ''">
@@ -31,9 +34,8 @@ import { minmax } from './tools';
         }
       </div>
       <div cdkDrag style="padding: 40px;">
-        <div class="map-container" #container (contextmenu)="onRightClick($event)"
-          [style.scale]="_scale">
-          <img [src]="_state.img"/>
+        <div class="map-container" #container (contextmenu)="onRightClick($event)" [style.scale]="_scale">
+          <img [src]="_state.img" alt="" />
 
           @for (area of _state.floorMap.get(_state.img || ''); track area; let i = $index) {
             <div
@@ -46,27 +48,20 @@ import { minmax } from './tools';
               cdkDrag
               cdkDragBoundary=".map-container"
               [cdkDragConstrainPosition]="dragConstrainPosition"
-              (click)="pinClick(area, i)"
-              (cdkDragEnded)="savePin($event, i)">
-              <etc-icon [icon]="area.icon || eiPlus"></etc-icon>
+              (click)="pinClick(area)"
+              (cdkDragEnded)="savePin($event, i)"
+            >
+              <etc-icon [icon]="area.icon || eiPlus" />
             </div>
           }
         </div>
       </div>
     </div>
-    `,
+  `,
   standalone: true,
-  imports: [
-    DragDropModule,
-    EtcDialogModule,
-    EtcIconsModule,
-    EtcFormFieldInput,
-    EtcFormFieldModule,
-    EtcRadioModule,
-    ReactiveFormsModule
-  ],
+  imports: [DragDropModule, EtcDialogModule, EtcIconsModule, EtcFormFieldInput, EtcFormFieldModule, EtcRadioModule, ReactiveFormsModule],
   host: {
-   '(wheel)': 'zoom($event)',
+    '(wheel)': 'zoom($event)',
   },
 })
 export class MapComponent {
@@ -77,10 +72,10 @@ export class MapComponent {
   container!: ElementRef;
 
   protected _state = inject(State);
-  private _dialog = inject(EtcDialog);
+  private readonly _dialog = inject(EtcDialog);
 
   protected _scale = 1;
-  private _padding = 0;
+  private readonly _padding = 0;
 
   constructor() {
     this._state.fc.valueChanges.pipe(takeUntilDestroyed()).subscribe(value => {
@@ -90,7 +85,7 @@ export class MapComponent {
         }
         this._state.img = value;
       }
-    })
+    });
   }
 
   zoom(event: WheelEvent) {
@@ -101,17 +96,17 @@ export class MapComponent {
     }
   }
 
-  pinClick(area: Pin, index: number) {
-    const dialogRef: DialogRef<{color: string, icon: EiIcon}, DialogComponent> = this._dialog.open(DialogComponent, {
+  pinClick(area: Pin) {
+    const dialogRef: DialogRef<{ color: string; icon: EiIcon }, DialogComponent> = this._dialog.open(DialogComponent, {
       width: '400px',
       height: '300px',
       data: {
         color: area.color,
         icon: area.icon,
-      }
+      },
     });
 
-    dialogRef.closed.subscribe((retour: {color: string, icon: EiIcon} | undefined) => {
+    dialogRef.closed.subscribe((retour: { color: string; icon: EiIcon } | undefined) => {
       area.color = retour?.color;
       area.icon = retour?.icon;
     });
@@ -136,7 +131,7 @@ export class MapComponent {
     const newPin: Pin = {
       x: event.offsetX + this._padding,
       y: event.offsetY + this._padding,
-    }
+    };
 
     const map = this._state.floorMap.get(this._state.img || '');
     if (this._state.img && map) {
@@ -151,7 +146,7 @@ export class MapComponent {
       x: point.x + zoomMoveXDifference - 25, // half the size of the pin
       y: point.y + zoomMoveYDifference - 25,
     };
-  }
+  };
 
   protected readonly eiPlus = eiPlus;
 }

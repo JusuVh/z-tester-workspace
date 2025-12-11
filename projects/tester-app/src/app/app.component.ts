@@ -1,16 +1,7 @@
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import {
-  eiActionFilter,
-  eiBuild,
-  eiHome, eiList,
-  eiPin,
-  eiSettings,
-  eiTheme,
-  eiThermometer,
-  EtcIconsModule
-} from '@datanumia/etincelle-icons';
+import { eiHome, eiList, eiPin, EtcIconsModule } from '@datanumia/etincelle-icons';
 import { EtcFormFieldModule } from '@datanumia/etincelle/form-field';
 import { EtcNavigationModule } from '@datanumia/etincelle/navigation';
 import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
@@ -26,7 +17,7 @@ import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
     <div class="etc-sidenav-container">
       <etc-sidenav>
         <a etc-sidenav-item [routerLink]="['grid']">
-          <etc-icon [icon]="eiHome"></etc-icon>
+          <etc-icon [icon]="eiHome" />
           Accueil
         </a>
         <!--<a etc-sidenav-item [routerLink]="['map']">
@@ -34,18 +25,26 @@ import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
           Map
         </a>-->
         <a etc-sidenav-item [routerLink]="['signal']">
-          <etc-icon [icon]="eiList"></etc-icon>
+          <etc-icon [icon]="eiList" />
           Signal Forms
         </a>
       </etc-sidenav>
       <main>
-        <router-outlet class="etc-main-router-outlet"></router-outlet>
+        <router-outlet class="etc-main-router-outlet" />
       </main>
     </div>
   `,
   styles: ``,
   standalone: true,
-  imports: [RouterOutlet, EtcIconsModule, EtcSelectableCardModule, ReactiveFormsModule, EtcNavigationModule, EtcFormFieldModule, RouterLink],
+  imports: [
+    RouterOutlet,
+    EtcIconsModule,
+    EtcSelectableCardModule,
+    ReactiveFormsModule,
+    EtcNavigationModule,
+    EtcFormFieldModule,
+    RouterLink,
+  ],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
