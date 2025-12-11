@@ -1,11 +1,26 @@
 import { JsonPipe } from '@angular/common';
 import { Component, computed, signal } from '@angular/core';
-import { ReactiveFormsModule, Validators } from '@angular/forms';
-import { Field, form, required, debounce, disabled } from '@angular/forms/signals';
+import { ReactiveFormsModule } from '@angular/forms';
+import { debounce, disabled, Field, form, required } from '@angular/forms/signals';
 import { EtcCard, EtcCardHeaderH2 } from '@datanumia/etincelle/card';
-import { EtcFormField, EtcFormFieldModule } from '@datanumia/etincelle/form-field';
+import { EtcFormFieldModule } from '@datanumia/etincelle/form-field';
 import { EtcPageHeader } from '@datanumia/etincelle/page-header';
 import { Point, Resource } from './data.model';
+
+const getEmptyPoint = (): Required<Point> => ({
+  uuid: crypto.randomUUID(),
+  siteUuid: '',
+  zoneUuid: '',
+  usageUuid: '',
+  generalInformation: {
+    name: '',
+    externalIdentifier: '',
+    referenceIdentifier: '',
+    networkManager: '',
+    resource: '' as Resource,
+    quotationIdentifier: '',
+  },
+});
 
 @Component({
   selector: 'app-signal-forms-main',
@@ -15,31 +30,18 @@ import { Point, Resource } from './data.model';
   templateUrl: 'signal-forms.main.html',
   styleUrl: 'signal-forms.main.scss',
   imports: [
-    EtcPageHeader,
     EtcCard,
     EtcCardHeaderH2,
+    EtcFormFieldModule,
+    EtcPageHeader,
     Field,
-    ReactiveFormsModule,
     JsonPipe,
-    EtcFormFieldModule
+    ReactiveFormsModule,
   ]
 })
 export class SignalFormsMain {
   // 🎯 Create a signal with the initial model
-  initialPoint = signal<Required<Point>>({
-    uuid: crypto.randomUUID(),
-    siteUuid: '',
-    zoneUuid: '',
-    usageUuid: '',
-    generalInformation: {
-      name: '',
-      externalIdentifier: '',
-      referenceIdentifier: '',
-      networkManager: '',
-      resource: '' as Resource,
-      quotationIdentifier: '',
-    },
-  });
+  initialPoint = signal<Required<Point>>(getEmptyPoint());
 
   formDisabled = signal(false);
 
@@ -109,7 +111,7 @@ export class SignalFormsMain {
   }
 
   resetForm() {
-    this.pointForm().reset();
+    this.pointForm().reset(getEmptyPoint());
   }
 
   disableForm() {
