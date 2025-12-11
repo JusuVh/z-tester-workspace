@@ -1,0 +1,153 @@
+<etc-page-header>
+  <h1>Angular 21 Signal Forms Demo 🚀</h1>
+</etc-page-header>
+<etc-card>
+  <etc-card-header-h2>
+    <h2>Wowie-wow-wow</h2>
+  </etc-card-header-h2>
+
+  <div class="card-container">
+    <form class="form">
+      <fieldset>
+        <legend>Point Details</legend>
+
+        <etc-form-field>
+          <etc-label>UUID</etc-label>
+          <input etc-input [field]="pointForm.uuid" />
+        </etc-form-field>
+
+        <etc-form-field>
+          <etc-label>Site UUID</etc-label>
+          <input etc-input [field]="pointForm.siteUuid" />
+          @if (pointForm.siteUuid().invalid() && pointForm.siteUuid().touched()) {
+            <etc-error>Site UUID is required</etc-error>
+          }
+        </etc-form-field>
+
+        <label>
+          Site UUID:
+          <input [field]="pointForm.siteUuid" />
+          @if (pointForm.siteUuid().invalid() && pointForm.siteUuid().touched()) {
+            <span class="error">Site UUID is required</span>
+          }
+        </label>
+
+        <label>
+          Zone UUID:
+          <input [field]="pointForm.zoneUuid" placeholder="Optional" />
+        </label>
+
+        <label>
+          Usage UUID:
+          <input [field]="pointForm.usageUuid" placeholder="Optional" />
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>General Information</legend>
+
+        <label>
+          Name:
+          <input [field]="pointForm.generalInformation.name" />
+          @if (pointForm.generalInformation.name().invalid() && pointForm.generalInformation.name().touched()) {
+            <span class="error">Name is required</span>
+          }
+        </label>
+
+        <label>
+          Resource Type:
+          <select [field]="pointForm.generalInformation.resource">
+            <option value="">Select...</option>
+            <option value="ELECTRICITY">Electricity ⚡</option>
+            <option value="TEMP">Temperature 🌡️</option>
+            <option value="GAS">Gas 🔥</option>
+          </select>
+          @if (pointForm.generalInformation.resource().invalid() && pointForm.generalInformation.resource().touched()) {
+            <span class="error">Resource is required</span>
+          }
+        </label>
+
+        <label>
+          External Identifier:
+          <input [field]="pointForm.generalInformation.externalIdentifier"
+                 placeholder="Optional" />
+        </label>
+
+        <label>
+          Reference Identifier:
+          <input [field]="pointForm.generalInformation.referenceIdentifier"
+                 placeholder="Optional" />
+        </label>
+
+        <label>
+          Quotation Identifier:
+          <input [field]="pointForm.generalInformation.quotationIdentifier"
+                 placeholder="Optional" />
+        </label>
+      </fieldset>
+
+      <div class="actions">
+        <button type="button" (click)="fillSampleData()">
+          Fill Sample Data
+        </button>
+        <button type="button" (click)="resetForm()">
+          Reset
+        </button>
+        <button type="button" (click)="disableForm()" [disabled]="pointForm().disabled()">
+          Disable Form
+        </button>
+        <button type="button" (click)="enableForm()" [disabled]="!pointForm().disabled()">
+          Enable Form
+        </button>
+      </div>
+    </form>
+
+    <div class="signal-showcase">
+      <h3>✨ Signal Forms Magic ✨</h3>
+
+      <div class="signal-card">
+        <h4>📊 Form State (Direct Signals!)</h4>
+        <p><strong>Valid:</strong> {{ pointForm().valid() ? '✅' : '❌' }}</p>
+        <p><strong>Invalid:</strong> {{ pointForm().invalid() ? '❌' : '✅' }}</p>
+        <p><strong>Dirty:</strong> {{ pointForm().dirty() ? '📝' : '✨' }}</p>
+        <p><strong>Touched:</strong> {{ pointForm().touched() ? '👆' : '🚫' }}</p>
+        <p><strong>Disabled:</strong> {{ pointForm().disabled() ? '🔒' : '🔓' }}</p>
+      </div>
+
+      <div class="signal-card">
+        <h4>🎯 Control Values (Signals)</h4>
+        <p><strong>Name:</strong> {{ pointForm.generalInformation.name().value() || '(empty)' }}</p>
+        <p><strong>Resource:</strong> {{ pointForm.generalInformation.resource().value() || '(not selected)' }}</p>
+        <p><strong>Site UUID:</strong> {{ pointForm.siteUuid().value() || '(empty)' }}</p>
+      </div>
+
+      <div class="signal-card">
+        <h4>🧮 Computed Signal</h4>
+        <p class="summary">{{ formSummary() }}</p>
+      </div>
+
+      <div class="signal-card">
+        <h4>🔍 Validation Status</h4>
+        <p><strong>Name valid:</strong> {{ pointForm.generalInformation.name().valid() ? '✅' : '❌' }}</p>
+        <p><strong>Resource valid:</strong> {{ pointForm.generalInformation.resource().valid() ? '✅' : '❌' }}</p>
+        <p><strong>Site UUID valid:</strong> {{ pointForm.siteUuid().valid() ? '✅' : '❌' }}</p>
+      </div>
+
+      <div class="signal-card">
+        <h4>📦 Full Form Value (Signal)</h4>
+        <pre>{{ pointForm().value() | json }}</pre>
+      </div>
+
+      <div class="signal-card">
+        <h4>🔄 Initial Model (Signal)</h4>
+        <pre>{{ initialPoint() | json }}</pre>
+      </div>
+
+      <div class="signal-card full-width">
+        <h4>🎨 Resource Icon (Computed)</h4>
+        <div class="resource-display">{{ resourceIcon() }}</div>
+      </div>
+    </div>
+  </div>
+
+</etc-card>

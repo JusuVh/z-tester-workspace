@@ -1,0 +1,145 @@
+.demo-container {
+  margin: 2rem auto;
+  padding: 2rem;
+}
+
+.form {
+  border-radius: 8px;
+  flex: 2;
+}
+
+fieldset {
+  border: 1px solid var(--etc-sem-color-neutral);
+  border-radius: 4px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+}
+
+legend {
+  font-weight: bold;
+  color: #333;
+  padding: 0 0.5rem;
+}
+
+label {
+  display: block;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+input, select {
+  display: block;
+  width: 100%;
+  padding: 0.5rem;
+  margin-top: 0.25rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: #dd0031;
+  box-shadow: 0 0 0 3px rgba(221, 0, 49, 0.1);
+}
+
+input:read-only {
+  background: #e9ecef;
+  cursor: not-allowed;
+}
+
+.error {
+  color: #d32f2f;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+.actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 0.75rem 1.5rem;
+  background: #dd0031;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+button:hover:not(:disabled) {
+  background: #c50029;
+}
+
+button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+.card-container {
+  display: flex;
+  gap: 16px;
+}
+
+.signal-showcase {
+  flex: 3;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.signal-showcase h3 {
+  grid-column: 1 / -1;
+  color: var(--etc-sem-color-brand);
+  margin-bottom: 1rem;
+}
+
+.signal-card {
+  background: white;
+  border: 1px solid var(--etc-sem-color-brand);
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: rgba(50, 50, 93, 0.25) 0px 2px 5px -1px, rgba(0, 0, 0, 0.3) 0px 1px 3px -1px;
+}
+
+.signal-card.full-width {
+  grid-column: 1 / -1;
+}
+
+.signal-card h4 {
+  color: #1976d2;
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.signal-card p {
+  margin: 0.5rem 0;
+}
+
+.summary {
+  font-style: italic;
+  color: #555;
+  font-size: 1.1rem;
+}
+
+.resource-display {
+  font-size: 3rem;
+  text-align: center;
+  padding: 1rem;
+}
+
+pre {
+  background: #f5f5f5;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.875rem;
+  margin: 0;
+}

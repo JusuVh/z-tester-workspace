@@ -1,0 +1,86 @@
+.map-container {
+  position: relative;
+  cursor: move;
+  width: fit-content;
+
+  > div.my-point {
+    cursor: pointer;
+    position: absolute;
+    height: 50px;
+    width: 50px;
+    background-color: var(--etc-color-grey-secondary);
+    border: solid 2px var(--etc-color-grey-primary);
+    border-radius: 50px;
+    box-shadow: rgba(0, 0, 0, 0.25) 0px 54px 55px, rgba(0, 0, 0, 0.12) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
+    translate: -50% -50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &.pointer-events-none {
+      pointer-events: none;
+    }
+
+    .etc-icon {
+      color: white;
+    }
+  }
+}
+
+.etc-dialog-container {
+  &:focus-visible {
+    outline: none;
+  }
+}
+
+etc-radio-button {
+  label {
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    max-width: 400px;
+    overflow: hidden;
+  }
+}
+
+.color-picker {
+  height: 30px;
+  width: 30px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &.picker--selected {
+    outline: solid 1px black;
+    filter: brightness(80%);
+  }
+}
+
+body {
+  app-root-tester {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background-color: var(--etc-color-background);
+
+    --_top-offset: var(--etc-app-header--height);
+  }
+}
+
+.etc-sidenav-container {
+  flex: 1;
+}
+
+main {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-height: 100%;
+  min-width: 0;
+
+  router-outlet.etc-main-router-outlet + * {
+    overflow-y: auto;
+  }
+}
