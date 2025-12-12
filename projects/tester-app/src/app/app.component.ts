@@ -2,7 +2,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { eiHome, eiList, eiPin, eiTarget, EtcIconsModule } from '@datanumia/etincelle-icons';
+import { eiDashboard, eiList, eiTarget, EtcIconsModule } from '@datanumia/etincelle-icons';
 import { EtcFormFieldModule } from '@datanumia/etincelle/form-field';
 import { EtcNavigationModule } from '@datanumia/etincelle/navigation';
 import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
@@ -26,8 +26,8 @@ import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
     <div class="etc-sidenav-container">
       <etc-sidenav>
         <a etc-sidenav-item [routerLink]="['grid']">
-          <etc-icon [icon]="eiHome" />
-          Accueil
+          <etc-icon [icon]="eiDashboard" />
+          Grid
         </a>
         <!--<a etc-sidenav-item [routerLink]="['map']">
           <etc-icon [icon]="eiPin"></etc-icon>
@@ -62,8 +62,7 @@ import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class AppComponent {
-  protected readonly eiHome = eiHome;
-  protected readonly eiPin = eiPin;
   protected readonly eiList = eiList;
   protected readonly eiTarget = eiTarget;
+  protected readonly eiDashboard = eiDashboard;
 }
