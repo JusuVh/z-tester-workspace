@@ -8,6 +8,7 @@ import { map, skip } from 'rxjs';
  */
 /* ************************ */
 @Directive({
+  selector: '[appLoadingClick]',
   host: {
     class: 'loading',
     '[class.loading-on]': 'loading()',
@@ -19,6 +20,7 @@ export class LoadingOnCLickDirective {
 
   toggle() {
     this.loading.set(!this.loading());
+    console.log('toggle on click directive');
   }
 }
 

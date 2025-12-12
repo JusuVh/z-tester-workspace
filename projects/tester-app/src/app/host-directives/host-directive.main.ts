@@ -1,7 +1,8 @@
 import { Component, signal } from '@angular/core';
+import { EtcButton } from '@datanumia/etincelle/button';
 import { EtcCard, EtcCardHeaderH2 } from '@datanumia/etincelle/card';
 import { EtcPageHeader } from '@datanumia/etincelle/page-header';
-import { HostOnClickComponent } from './host-directives.components';
+import { HostFromHostComponent, HostInputComponent, HostOnClickComponent } from './host-directives.components';
 
 @Component({
   selector: 'app-host-directive-main',
@@ -20,24 +21,24 @@ import { HostOnClickComponent } from './host-directives.components';
         <div></div>
         <div>{{ hostOnClick.hostDir.loading() ? '✅' : '❌' }}</div>
 
-        <!--        <h4>2️⃣ Exposing Input/Output</h4>-->
-        <!--        <app-host-input #hostInput [loading]="hostInputComponentLoading()" (loadingChange)="log($event)">-->
-        <!--          <span>Le background est animé lorsque je click ici =></span>-->
-        <!--        </app-host-input>-->
-        <!--        <div><button etc-button squared variation="secondary" (click)="toggleLoading()">Click Me !</button></div>-->
-        <!--        <div>{{ hostInput.isLoading() }}</div>-->
+        <h4>2️⃣ Exposing Input/Output</h4>
+        <app-host-input #hostInput [loading]="hostInputComponentLoading()" (loadingChange)="log($event)">
+          <span>Le background est animé lorsque je click ici =></span>
+        </app-host-input>
+        <div><button etc-button squared variation="secondary" (click)="toggleLoading()">Click Me !</button></div>
+        <div>{{ hostInput.isLoading() }}</div>
 
-        <!--        <h4>3️⃣ With directive injection</h4>-->
-        <!--        <app-host-injection #hostInjection><span>Le background s'anime quand on me click</span></app-host-injection>-->
-        <!--        <div></div>-->
-        <!--        <div>{{ hostInjection.isLoading() }}</div>-->
+        <h4>3️⃣ With directive injection</h4>
+        <app-host-injection #hostInjection><span>Le background s'anime quand on me click</span></app-host-injection>
+        <div></div>
+        <div>{{ hostInjection.isLoading() }}</div>
       </div>
     </etc-card>
   `,
   host: {
     class: 'etc-page-container',
   },
-  imports: [EtcCard, EtcCardHeaderH2, EtcPageHeader, HostOnClickComponent],
+  imports: [EtcCard, EtcCardHeaderH2, EtcPageHeader, HostOnClickComponent, HostInputComponent, EtcButton, HostFromHostComponent],
 })
 export class HostDirectiveMain {
   hostInputComponentLoading = signal(false);

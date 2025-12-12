@@ -2,6 +2,7 @@ import { Component, computed, inject } from '@angular/core';
 import { outputToObservable, toSignal } from '@angular/core/rxjs-interop';
 import { map } from 'rxjs';
 import { LoadingFromHostDirective, LoadingInputDirective, LoadingOnCLickDirective } from './loading.directive';
+import { TooltipDirective } from './tooltip.directive';
 
 /* ************************ */
 /**
@@ -18,21 +19,23 @@ import { LoadingFromHostDirective, LoadingInputDirective, LoadingOnCLickDirectiv
   `,
   host: {
     class: 'component-host',
+    '(click)': 'log()',
   },
-  hostDirectives: [
-    LoadingOnCLickDirective,
-    // TooltipDirective
-  ],
+  hostDirectives: [LoadingOnCLickDirective, TooltipDirective],
 })
 export class HostOnClickComponent {
   hostDir = inject(LoadingOnCLickDirective);
 
-  // tooltip = inject(TooltipDirective);
-  //
-  // constructor() {
-  //   this.tooltip.appTooltip.set('This button uses hostDirectives!');
-  //   this.tooltip.tooltipPosition.set('top');
-  // }
+  log() {
+    console.log('dans Composant');
+  }
+
+  tooltip = inject(TooltipDirective);
+
+  constructor() {
+    this.tooltip.appTooltip.set('This button uses TooltipDirective!');
+    this.tooltip.tooltipPosition.set('bottom');
+  }
 }
 
 /* ************************ */
@@ -47,7 +50,7 @@ export class HostOnClickComponent {
     class: 'component-host',
   },
   hostDirectives: [{ directive: LoadingInputDirective, inputs: ['loading'], outputs: ['loadingChange'] }],
-  // hostDirectives: [{ directive: LoadingInputDirective, inputs: ['loading: loadingAlias'], outputs: ['loadingChange'] }],
+  //hostDirectives: [{ directive: LoadingInputDirective, inputs: ['loading: loadingAlias'], outputs: ['loadingChange'] }],
 })
 export class HostInputComponent {
   hostDir = inject(LoadingInputDirective);
