@@ -1,5 +1,6 @@
 import { Route } from '@angular/router';
 import { GridComponent } from './grid.component';
+import { HostDirectiveMain } from './host-directives/host-directive.main';
 import { MapComponent } from './map.component';
 import { SignalFormsMain } from './signal-forms/signal-forms.main';
 
@@ -15,6 +16,10 @@ export const routes: Array<Route> = [
   {
     path: 'signal',
     component: SignalFormsMain,
+  },
+  {
+    path: 'host-directives',
+    component: HostDirectiveMain,
   },
   {
     path: '**',
