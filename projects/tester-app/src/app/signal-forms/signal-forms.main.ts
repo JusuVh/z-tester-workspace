@@ -34,12 +34,10 @@ const getEmptyPoint = (): Required<Point> => ({
   imports: [EtcCard, EtcCardHeaderH2, EtcFormFieldModule, EtcPageHeader, Field, JsonPipe, ReactiveFormsModule],
 })
 export class SignalFormsMain {
-  // 🎯 Create a signal with the initial model
   initialPoint = signal<Required<Point>>(getEmptyPoint());
 
   formDisabled = signal(false);
 
-  // 🎯 NEW: Pass the signal directly to form() - it creates controls automatically!
   pointForm = form(this.initialPoint, schemaPath => {
     debounce(schemaPath.generalInformation.name, 500);
     required(schemaPath.generalInformation.name, { message: 'Required, message setup in validator' });
@@ -69,7 +67,6 @@ export class SignalFormsMain {
 
   nameFieldState = this.pointForm.generalInformation.name();
 
-  // 🎯 Computed signals based on form signals
   formSummary = computed(() => {
     const name = this.nameFieldState.value();
     const resource = this.pointForm.generalInformation.resource().value();
@@ -106,7 +103,6 @@ export class SignalFormsMain {
   });
 
   fillSampleData() {
-    // 🎯 Update the signal - form automatically syncs!
     this.initialPoint.set({
       uuid: crypto.randomUUID(),
       siteUuid: crypto.randomUUID(),
