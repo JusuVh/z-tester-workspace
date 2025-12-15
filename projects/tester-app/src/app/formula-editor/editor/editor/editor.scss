@@ -1,0 +1,22 @@
+:host {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 12px;
+  min-height: 100px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  line-height: 1.8;
+  white-space: nowrap;
+  word-wrap: break-word;
+
+  &:focus {
+    outline: none;
+    margin: -1px;
+    border: 2px solid #4A90E2;
+  }
+
+  &:empty:before {
+    content: attr(data-placeholder);
+    color: #95a5a6;
+  }
+}

@@ -2,7 +2,7 @@ import { NgOptimizedImage } from '@angular/common';
 import { ChangeDetectionStrategy, Component } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { RouterLink, RouterOutlet } from '@angular/router';
-import { eiDashboard, eiList, eiTarget, EtcIconsModule } from '@datanumia/etincelle-icons';
+import { eiDashboard, eiList, eiPlus, eiTarget, EtcIconsModule } from '@datanumia/etincelle-icons';
 import { EtcFormFieldModule } from '@datanumia/etincelle/form-field';
 import { EtcNavigationModule } from '@datanumia/etincelle/navigation';
 import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
@@ -18,6 +18,7 @@ import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
           alt=""
           width="42"
           height="32"
+          priority
           style="margin: -40px; height: 80px;  width: 100px;"
         />
         <span>🌈 The beautiful world of the Tester App <span style="display: inline-block; rotate: 90deg">🌈</span></span>
@@ -40,6 +41,10 @@ import { EtcSelectableCardModule } from '@datanumia/etincelle/selectable-card';
         <a etc-sidenav-item [routerLink]="['host-directives']">
           <etc-icon [icon]="eiTarget" />
           Host Directives
+        </a>
+        <a etc-sidenav-item [routerLink]="['formula']">
+          <etc-icon [icon]="eiPlus" />
+          Formula Editor
         </a>
       </etc-sidenav>
       <main>
@@ -65,4 +70,5 @@ export class AppComponent {
   protected readonly eiList = eiList;
   protected readonly eiTarget = eiTarget;
   protected readonly eiDashboard = eiDashboard;
+  protected readonly eiPlus = eiPlus;
 }

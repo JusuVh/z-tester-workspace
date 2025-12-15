@@ -1,0 +1,52 @@
+:host {
+  .reference-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .reference-card {
+    background-color: #FBFBFD;
+    padding: 16px;
+    border-radius: 10px;
+    border: solid 1px var(--etc-sem-color-neutral-contrast);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .reference-card__header {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .reference-card__id-token {
+      width: fit-content;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-family: 'Courier New', monospace;
+    }
+  }
+
+  ::ng-deep {
+    --formula-token-background-color: #D1FAE5;
+    --formula-token-border-color: #10B981;
+    --formula-token-color: #065F46;
+
+    .editor-token {
+      display: inline-block;
+    }
+
+    .id-token {
+      display: inline-block;
+      background-color: var(--formula-token-background-color);
+      color: var(--formula-token-color);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-weight: bold;
+      margin: 0 2px;
+      border: 1px solid var(--formula-token-border-color);
+      box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+    }
+  }
+}
