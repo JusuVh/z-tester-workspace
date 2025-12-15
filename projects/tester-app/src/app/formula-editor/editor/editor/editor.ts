@@ -34,19 +34,32 @@ export function keydownHandler(event: KeyboardEvent) {
 
 @Component({
   selector: 'app-editor-token',
-  template: ` {{ token() + (label() ? ': ' + label() : '') }} `,
+  template: `<span #content>{{ displayText() }}</span>`,
   host: {
     class: 'editor-token id-token',
     '[attr.contenteditable]': 'true',
+    '[attr.data-token]': 'token()',
   },
 })
 export class EditorToken {
   token = input.required();
   label = input('');
 
+  private readonly _elementRef = inject(ElementRef);
+
+  displayText = computed(() => this.token() + (this.label() ? ': ' + this.label() : ''));
+
   constructor() {
+    // Watch for changes and reset content if browser modified it
     effect(() => {
-      console.log(this.token(), this.label());
+      console.log('token effect');
+      const expectedText = this.displayText();
+      const actualText = this._elementRef.nativeElement.textContent || '';
+
+      // If browser added extra text, reset to expected
+      if (actualText !== expectedText) {
+        this._elementRef.nativeElement.textContent = expectedText;
+      }
     });
   }
 }
@@ -83,8 +96,9 @@ export class Editor implements AfterViewInit {
   plainText = signal('#1 + #2 * 2 - #3');
   contentArray = computed(() =>
     this.plainText()
+      .replaceAll(/\s+/g, ' ')
+      .trim()
       .split(/(#\d+)/g)
-      .map(part => part.trim())
       .filter(part => part.length > 0),
   );
   detectedIds = computed<Array<string>>(() => this.plainText().match(/#\d+/g) || []);
@@ -116,14 +130,21 @@ export class Editor implements AfterViewInit {
 
   ngAfterViewInit() {
     this.cursorPosition.set(this.plainText().length);
-    this.updateContent();
-    this.restoreCursorPosition();
+    this._restoreCursorPosition();
   }
 
   onInput() {
-    this.saveCursorPosition();
-    this.updateContent();
-    this.restoreCursorPosition();
+    this._saveCursorPosition();
+
+    const newText = this._extractPlainText();
+    const oldText = this.plainText();
+
+    // Only trigger re-render if normalized text changed
+    if (newText !== oldText) {
+      this.plainText.set(newText);
+    }
+
+    this._restoreCursorPosition();
   }
 
   onPaste(event: ClipboardEvent) {
@@ -181,7 +202,7 @@ export class Editor implements AfterViewInit {
     }
 
     // Get current text and manipulate it
-    let currentText = this.extractPlainText();
+    let currentText = this._extractPlainText();
 
     // Remove dragged text from original position
     const draggedIndex = currentText.indexOf(droppedText);
@@ -193,21 +214,18 @@ export class Editor implements AfterViewInit {
     }
 
     // Insert at drop position
-    this._elementRef.nativeElement.textContent = currentText.slice(0, dropPosition) + droppedText + currentText.slice(dropPosition);
+    const newText = currentText.slice(0, dropPosition) + droppedText + currentText.slice(dropPosition);
+    this._elementRef.nativeElement.textContent = newText;
+    this.plainText.set(newText);
     this.cursorPosition.set(dropPosition + droppedText.length);
-    this.updateContent();
-    this.restoreCursorPosition();
+    this._restoreCursorPosition();
   }
 
-  private updateContent() {
-    this.plainText.set(this.extractPlainText());
+  private _extractPlainText(): string {
+    return (this._elementRef.nativeElement.textContent || '').replaceAll(/\s+/g, ' ').trim();
   }
 
-  private extractPlainText(): string {
-    return this._elementRef.nativeElement.textContent || '';
-  }
-
-  private saveCursorPosition() {
+  private _saveCursorPosition() {
     const selection = globalThis.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
@@ -228,8 +246,8 @@ export class Editor implements AfterViewInit {
     }
   }
 
-  private restoreCursorPosition() {
-    // Use setTimeout to wait for DOM update
+  private _restoreCursorPosition() {
+    // Use setTimeout to wait for DOM update (especially Angular re-renders)
     setTimeout(() => {
       const selection = globalThis.getSelection();
       if (!selection) return;
@@ -238,27 +256,35 @@ export class Editor implements AfterViewInit {
 
       let currentPos = 0;
       let node = walker.nextNode();
+      let targetNode = null;
+      let targetOffset = 0;
 
       while (node) {
         const nodeLength = node.textContent?.length || 0;
 
         if (currentPos + nodeLength >= this.cursorPosition()) {
-          const offset = this.cursorPosition() - currentPos;
-          const range = document.createRange();
-
-          try {
-            range.setStart(node, offset);
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-            return;
-          } catch (e) {
-            console.error('Error restoring cursor:', e);
-          }
+          targetNode = node;
+          targetOffset = this.cursorPosition() - currentPos;
+          break;
         }
 
         currentPos += nodeLength;
         node = walker.nextNode();
+      }
+
+      if (targetNode) {
+        try {
+          const range = document.createRange();
+          // Clamp offset to node length to prevent errors
+          const safeOffset = Math.min(targetOffset, targetNode.textContent?.length || 0);
+          range.setStart(targetNode, safeOffset);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          return;
+        } catch (e) {
+          console.error('Error restoring cursor:', e);
+        }
       }
 
       // Fallback: place cursor at end
