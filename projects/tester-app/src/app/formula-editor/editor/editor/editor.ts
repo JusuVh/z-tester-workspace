@@ -1,4 +1,15 @@
-import { AfterViewInit, Component, computed, effect, ElementRef, inject, input, signal, WritableSignal } from '@angular/core';
+import {
+  AfterViewChecked,
+  AfterViewInit,
+  Component,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  input,
+  signal,
+  WritableSignal,
+} from '@angular/core';
 import { explicitEffect } from '@datanumia/etincelle/shared';
 
 export function pasteHandler(event: ClipboardEvent) {
@@ -41,7 +52,7 @@ export function keydownHandler(event: KeyboardEvent) {
     '[attr.data-token]': 'token()',
   },
 })
-export class EditorToken {
+export class EditorToken implements AfterViewChecked {
   token = input.required();
   label = input('');
 
@@ -49,18 +60,13 @@ export class EditorToken {
 
   displayText = computed(() => this.token() + (this.label() ? ': ' + this.label() : ''));
 
-  constructor() {
-    // Watch for changes and reset content if browser modified it
-    effect(() => {
-      console.log('token effect');
-      const expectedText = this.displayText();
-      const actualText = this._elementRef.nativeElement.textContent || '';
+  ngAfterViewChecked() {
+    const actualText = this._elementRef.nativeElement.textContent || '';
 
-      // If browser added extra text, reset to expected
-      if (actualText !== expectedText) {
-        this._elementRef.nativeElement.textContent = expectedText;
-      }
-    });
+    // If browser added extra text, reset to expected
+    if (actualText !== this.displayText()) {
+      this._elementRef.nativeElement.textContent = this.displayText();
+    }
   }
 }
 
