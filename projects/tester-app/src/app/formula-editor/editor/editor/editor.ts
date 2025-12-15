@@ -45,27 +45,28 @@ export function keydownHandler(event: KeyboardEvent) {
 
 @Component({
   selector: 'app-editor-token',
-  template: `<span #content>{{ displayText() }}</span>`,
+  template: `{{ token() }}`,
   host: {
     class: 'editor-token id-token',
     '[attr.contenteditable]': 'true',
     '[attr.data-token]': 'token()',
+    '[attr.data-label]': 'displayedLabel()',
   },
 })
 export class EditorToken implements AfterViewChecked {
   token = input.required();
-  label = input('');
+  label = input<string | undefined>(undefined);
+
+  displayedLabel = computed(() => (this.label() ? ` : ${this.label()}` : ''));
 
   private readonly _elementRef = inject(ElementRef);
-
-  displayText = computed(() => this.token() + (this.label() ? ': ' + this.label() : ''));
 
   ngAfterViewChecked() {
     const actualText = this._elementRef.nativeElement.textContent || '';
 
     // If browser added extra text, reset to expected
-    if (actualText !== this.displayText()) {
-      this._elementRef.nativeElement.textContent = this.displayText();
+    if (actualText !== this.token()) {
+      this._elementRef.nativeElement.textContent = this.token();
     }
   }
 }
@@ -75,9 +76,9 @@ export class EditorToken implements AfterViewChecked {
   template: `
     @for (content of contentArray(); let i = $index; track i) {
       @if (content.startsWith('#')) {
-        <app-editor-token [token]="content" [label]="idLabels[content]()" />
+        <app-editor-token [token]="content" [label]="idLabels[content]?.()" />
       } @else {
-        {{ content.trim() }}
+        {{ content }}
       }
     }
   `,
@@ -103,7 +104,6 @@ export class Editor implements AfterViewInit {
   contentArray = computed(() =>
     this.plainText()
       .replaceAll(/\s+/g, ' ')
-      .trim()
       .split(/(#\d+)/g)
       .filter(part => part.length > 0),
   );
@@ -221,14 +221,13 @@ export class Editor implements AfterViewInit {
 
     // Insert at drop position
     const newText = currentText.slice(0, dropPosition) + droppedText + currentText.slice(dropPosition);
-    this._elementRef.nativeElement.textContent = newText;
     this.plainText.set(newText);
     this._cursorPosition.set(dropPosition + droppedText.length);
     this._restoreCursorPosition();
   }
 
   private _extractPlainText(): string {
-    return (this._elementRef.nativeElement.textContent || '').replaceAll(/\s+/g, ' ').trim();
+    return (this._elementRef.nativeElement.textContent || '').replaceAll(/\s+/g, ' ');
   }
 
   private _saveCursorPosition() {
