@@ -105,7 +105,7 @@ export class Editor implements AfterViewInit {
 
   idLabels: Record<string, WritableSignal<string>> = {};
 
-  cursorPosition = signal(0);
+  private readonly _cursorPosition = signal(0);
 
   constructor() {
     effect(() => {
@@ -129,7 +129,7 @@ export class Editor implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this.cursorPosition.set(this.plainText().length);
+    this._cursorPosition.set(this.plainText().length);
     this._restoreCursorPosition();
   }
 
@@ -217,7 +217,7 @@ export class Editor implements AfterViewInit {
     const newText = currentText.slice(0, dropPosition) + droppedText + currentText.slice(dropPosition);
     this._elementRef.nativeElement.textContent = newText;
     this.plainText.set(newText);
-    this.cursorPosition.set(dropPosition + droppedText.length);
+    this._cursorPosition.set(dropPosition + droppedText.length);
     this._restoreCursorPosition();
   }
 
@@ -232,16 +232,16 @@ export class Editor implements AfterViewInit {
     const range = selection.getRangeAt(0);
 
     // Calculate absolute position in plain text
-    this.cursorPosition.set(0);
+    this._cursorPosition.set(0);
     const walker = document.createTreeWalker(this._elementRef.nativeElement, NodeFilter.SHOW_TEXT);
 
     let node = walker.nextNode();
     while (node) {
       if (node === range.startContainer) {
-        this.cursorPosition.set(this.cursorPosition() + range.startOffset);
+        this._cursorPosition.set(this._cursorPosition() + range.startOffset);
         break;
       }
-      this.cursorPosition.set(this.cursorPosition() + (node.textContent?.length || 0));
+      this._cursorPosition.set(this._cursorPosition() + (node.textContent?.length || 0));
       node = walker.nextNode();
     }
   }
@@ -262,9 +262,9 @@ export class Editor implements AfterViewInit {
       while (node) {
         const nodeLength = node.textContent?.length || 0;
 
-        if (currentPos + nodeLength >= this.cursorPosition()) {
+        if (currentPos + nodeLength >= this._cursorPosition()) {
           targetNode = node;
-          targetOffset = this.cursorPosition() - currentPos;
+          targetOffset = this._cursorPosition() - currentPos;
           break;
         }
 
