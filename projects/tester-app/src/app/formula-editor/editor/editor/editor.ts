@@ -77,6 +77,8 @@ export class EditorToken implements AfterViewChecked {
     @for (content of contentArray(); let i = $index; track i) {
       @if (content.startsWith('#')) {
         <app-editor-token [token]="content" [label]="idLabels[content]?.()" />
+      } @else if (content === ' ') {
+        &ZeroWidthSpace;
       } @else {
         {{ content }}
       }
@@ -100,9 +102,10 @@ export class EditorToken implements AfterViewChecked {
 export class Editor implements AfterViewInit {
   _elementRef = inject(ElementRef);
 
-  plainText = signal('#1 + #2 * 2 - #3');
+  plainText = signal('#1');
   contentArray = computed(() =>
     this.plainText()
+      .replaceAll('\u200B', ' ')
       .replaceAll(/\s+/g, ' ')
       .split(/(#\d+)/g)
       .filter(part => part.length > 0),
@@ -135,8 +138,8 @@ export class Editor implements AfterViewInit {
   }
 
   ngAfterViewInit() {
-    this._cursorPosition.set(this.plainText().length);
-    this._restoreCursorPosition();
+    this._cursorPosition.set(this.plainText().length + this.detectedIds().length);
+    document.getSelection()?.collapse(this._elementRef.nativeElement, this._cursorPosition());
   }
 
   onInput() {
@@ -190,8 +193,8 @@ export class Editor implements AfterViewInit {
     if (!droppedText) return;
 
     // Calculate where the drop occurred
-    const range = document.caretRangeFromPoint(event.clientX, event.clientY);
-    if (!range) return;
+    const caretPosition = document.caretPositionFromPoint(event.clientX, event.clientY);
+    if (!caretPosition) return;
 
     const walker = document.createTreeWalker(this._elementRef.nativeElement, NodeFilter.SHOW_TEXT);
 
@@ -199,8 +202,8 @@ export class Editor implements AfterViewInit {
     let node = walker.nextNode();
 
     while (node) {
-      if (node === range.startContainer) {
-        dropPosition += range.startOffset;
+      if (node === caretPosition.offsetNode) {
+        dropPosition += caretPosition.offset;
         break;
       }
       dropPosition += node.textContent?.length || 0;
