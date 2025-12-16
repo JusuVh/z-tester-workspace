@@ -1,4 +1,4 @@
-import { Component, computed, ElementRef, inject, input, signal } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { explicitEffect } from '@datanumia/etincelle/shared';
 
 export function pasteHandler(event: ClipboardEvent) {
@@ -64,24 +64,35 @@ export function extractTextNodes(rootNode: Node): Array<Node> {
 
 @Component({
   selector: 'app-editor',
-  template: ``,
+  template: `
+    <div
+      class="formula-editor-content"
+      #editorContent
+      contenteditable
+      (input)="_onInput()"
+      (paste)="_onPaste($event)"
+      (keydown)="_onKeyDown($event)"
+      (dragstart)="_preventAction($event)"
+      (drop)="_preventAction($event)"
+      [attr.data-placeholder]="'Type a formula like: #1 + #2 * 2'"
+    ></div>
+    <div class="token-tooltip" #tooltip [class.visible]="tooltipVisible()">
+      {{ tooltipContent() }}
+    </div>
+  `,
   styleUrl: './editor.scss',
   host: {
-    class: 'formula-editor',
-    '[attr.contenteditable]': '""',
-    '(input)': '_onInput()',
-    '(paste)': '_onPaste($event)',
-    '(keydown)': '_onKeyDown($event)',
-    '(dragstart)': '_preventAction($event)',
-    '(drop)': '_preventAction($event)',
-    '[attr.data-placeholder]': '"Type a formula like: #1 + #2 * 2"',
+    '(mouseover)': '_onMouseOver($event)',
+    '(mouseout)': '_onMouseOut($event)',
   },
   exportAs: 'AppEditor',
-  imports: [],
 })
 export class Editor {
   private readonly _elementRef = inject(ElementRef);
   private readonly _cursorPosition = signal(0);
+
+  private readonly _editorContent = viewChild.required<ElementRef<HTMLElement>>('editorContent');
+  private readonly _tooltip = viewChild.required<ElementRef<HTMLElement>>('tooltip');
 
   /**
    * Input formula if already present
@@ -94,6 +105,10 @@ export class Editor {
 
   idLabels: Record<string, string> = {};
 
+  // Tooltip state
+  tooltipVisible = signal(false);
+  tooltipContent = signal('');
+
   constructor() {
     explicitEffect([this.detectedIds], ([ids]) => {
       // Remove labels from IDs that are not detected anymore
@@ -102,9 +117,9 @@ export class Editor {
       });
     });
 
-    explicitEffect([this.formula], ([inputFormula]) => {
-      if (inputFormula) {
-        this._elementRef.nativeElement.textContent = inputFormula;
+    explicitEffect([this.formula, this._editorContent], ([inputFormula, viewReady]) => {
+      if (inputFormula && viewReady) {
+        this._editorContent().nativeElement.textContent = inputFormula;
         this._cursorPosition.set(inputFormula.length);
         this._updateContent();
         this._restoreCursorPosition();
@@ -139,12 +154,50 @@ export class Editor {
     event.preventDefault();
   }
 
+  protected _onMouseOver(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    if (target.classList.contains('id-token')) {
+      const token = target.dataset['token'];
+      const label = token ? this.idLabels[token] : '';
+
+      if (label) {
+        this.tooltipContent.set(label);
+        this.tooltipVisible.set(true);
+        this._positionTooltip(target);
+      }
+    }
+  }
+
+  protected _onMouseOut(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+
+    if (target.classList.contains('id-token')) {
+      this.tooltipVisible.set(false);
+    }
+  }
+
+  private _positionTooltip(target: HTMLElement) {
+    if (!this._tooltip()) return;
+
+    const tooltip = this._tooltip().nativeElement;
+    const targetRect = target.getBoundingClientRect();
+    const parentRect = this._elementRef.nativeElement.getBoundingClientRect();
+
+    // Position above the token
+    const top = targetRect.top - parentRect.top - tooltip.offsetHeight - 8;
+    const left = targetRect.left - parentRect.left + targetRect.width / 2 - tooltip.offsetWidth / 2;
+
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+  }
+
   /**
    * Re-render all content after any update to formula or labels
    */
   private _updateContent() {
-    const text = (this._elementRef.nativeElement.textContent || '').replaceAll(/\s+/g, ' ');
-    this._elementRef.nativeElement.innerHTML = this._insertTokens(text);
+    const text = (this._editorContent().nativeElement.textContent || '').replaceAll(/\s+/g, ' ');
+    this._editorContent().nativeElement.innerHTML = this._insertTokens(text);
     this.plainText.set(text);
   }
 
@@ -173,7 +226,7 @@ export class Editor {
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
-    const textNodes = extractTextNodes(this._elementRef.nativeElement);
+    const textNodes = extractTextNodes(this._editorContent().nativeElement);
 
     let position = 0;
     for (const node of textNodes) {
@@ -197,7 +250,7 @@ export class Editor {
       if (!selection) return;
 
       const targetPosition = this._cursorPosition();
-      const textNodes = extractTextNodes(this._elementRef.nativeElement);
+      const textNodes = extractTextNodes(this._editorContent().nativeElement);
 
       let position = 0;
       for (const node of textNodes) {
@@ -229,7 +282,7 @@ export class Editor {
    */
   private _placeCursorAtEnd(selection: Selection) {
     const range = document.createRange();
-    range.selectNodeContents(this._elementRef.nativeElement);
+    range.selectNodeContents(this._editorContent().nativeElement);
     range.collapse(false);
     selection.removeAllRanges();
     selection.addRange(range);

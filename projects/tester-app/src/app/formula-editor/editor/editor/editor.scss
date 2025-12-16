@@ -1,27 +1,67 @@
 :host {
-  display: inline-flex;
-  align-items: center;
+  position: relative;
+  display: flex;
 
-  box-sizing: content-box;
-  outline: none;
-  border: 1px solid var(--etc-sem-color-border-neutral-contrast);
-  border-radius: 5px;
-  padding: 12px;
-  max-height: 52px;
-  font-family: 'Courier New', monospace;
-  font-size: 14px;
-  line-height: 18px;
-  white-space: pre;
-  word-wrap: break-word;
+  .formula-editor-content {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
 
-  &:focus {
-    margin: -1px;
-    border: 2px solid var(--etc-sem-color-border-brand);
+    box-sizing: content-box;
+    outline: none;
+    border: 1px solid var(--etc-sem-color-border-neutral-contrast);
+    border-radius: 5px;
+    padding: 12px;
+    max-height: 52px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 18px;
+    white-space: pre;
+    word-wrap: break-word;
+
+    &:focus {
+      margin: -1px;
+      border: 2px solid var(--etc-sem-color-border-brand);
+    }
+
+    &:empty:before {
+      content: attr(data-placeholder);
+      color: var(--etc-sem-color-text-weakest);
+      pointer-events: none;
+    }
   }
 
-  &:empty:before {
-    content: attr(data-placeholder);
-    color: var(--etc-sem-color-text-weakest);
-    cursor: text;
+  .token-tooltip {
+    --_tooltip-background: var(--etc-sem-color-text-default);
+    position: absolute;
+    background-color: var(--_tooltip-background);
+    color: var(--etc-sem-color-text-none);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: var(--etc-prim-font-size-5);
+    line-height: var(--etc-prim-font-line-height-5);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 1000;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(2px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+
+    &.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    // Arrow pointing down
+    &::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: var(--_tooltip-background);
+    }
   }
 }
