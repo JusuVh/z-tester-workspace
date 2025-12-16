@@ -1,27 +1,16 @@
-import {
-  AfterViewChecked,
-  AfterViewInit,
-  Component,
-  computed,
-  effect,
-  ElementRef,
-  inject,
-  input,
-  signal,
-  WritableSignal,
-} from '@angular/core';
+import { AfterViewInit, Component, computed, ElementRef, inject, signal, WritableSignal } from '@angular/core';
 import { explicitEffect } from '@datanumia/etincelle/shared';
 
 export function pasteHandler(event: ClipboardEvent) {
   event.preventDefault();
   const text = event.clipboardData?.getData('text/plain');
-  if (!text) throw new Error('exit');
+  if (!text) return;
 
   // Remove all newlines and carriage returns
   const cleanText = text.replaceAll(/[\r\n]+/g, ' ');
 
   const selection = globalThis.getSelection();
-  if (!selection || selection.rangeCount === 0) throw new Error('exit');
+  if (!selection || selection.rangeCount === 0) return;
 
   const range = selection.getRangeAt(0);
   range.deleteContents();
@@ -44,68 +33,28 @@ export function keydownHandler(event: KeyboardEvent) {
 }
 
 @Component({
-  selector: 'app-editor-token',
-  template: `{{ token() }}`,
-  host: {
-    class: 'editor-token id-token',
-    '[attr.contenteditable]': 'true',
-    '[attr.data-token]': 'token()',
-    '[attr.data-label]': 'displayedLabel()',
-  },
-})
-export class EditorToken implements AfterViewChecked {
-  token = input.required();
-  label = input<string | undefined>(undefined);
-
-  displayedLabel = computed(() => (this.label() ? ` : ${this.label()}` : ''));
-
-  private readonly _elementRef = inject(ElementRef);
-
-  ngAfterViewChecked() {
-    const actualText = this._elementRef.nativeElement.textContent || '';
-
-    // If browser added extra text, reset to expected
-    if (actualText !== this.token()) {
-      this._elementRef.nativeElement.textContent = this.token();
-    }
-  }
-}
-
-@Component({
   selector: 'app-editor',
-  template: `
-    @for (content of contentArray(); let i = $index; track i) {
-      @if (content.startsWith('#')) {
-        <app-editor-token [token]="content" [label]="idLabels[content]?.()" />
-      } @else if (content === ' ') {
-        &ZeroWidthSpace;
-      } @else {
-        {{ content }}
-      }
-    }
-  `,
+  template: ``,
   styleUrl: './editor.scss',
   host: {
     class: 'formula-editor',
-    '[attr.contenteditable]': 'true',
+    '[attr.contenteditable]': '""',
     '(input)': 'onInput()',
     '(paste)': 'onPaste($event)',
-    '(keydown)': 'onKeyDown($event)',
     '(click)': 'onClick($event)',
-    '(drop)': 'onDrop($event)',
-    '(dragover)': 'onDragOver($event)',
+    '(keydown)': 'onKeyDown($event)',
     '[attr.data-placeholder]': '"Type a formula like: #1 + #2 * 2"',
   },
   exportAs: 'AppEditor',
-  imports: [EditorToken],
+  imports: [],
 })
 export class Editor implements AfterViewInit {
-  _elementRef = inject(ElementRef);
+  private readonly _elementRef = inject(ElementRef);
 
-  plainText = signal('#1');
+  plainText = signal('');
+
   contentArray = computed(() =>
     this.plainText()
-      .replaceAll('\u200B', ' ')
       .replaceAll(/\s+/g, ' ')
       .split(/(#\d+)/g)
       .filter(part => part.length > 0),
@@ -117,13 +66,6 @@ export class Editor implements AfterViewInit {
   private readonly _cursorPosition = signal(0);
 
   constructor() {
-    effect(() => {
-      console.log(this.contentArray());
-    });
-    effect(() => {
-      console.log(this.plainText());
-    });
-
     explicitEffect([this.detectedIds], ([ids]) => {
       ids.forEach(id => {
         if (!this.idLabels[id]) {
@@ -137,34 +79,31 @@ export class Editor implements AfterViewInit {
     });
   }
 
+  updateLabel(token: string, label: string) {
+    this.idLabels[token].set(label);
+    this._elementRef.nativeElement.querySelectorAll(`[data-token="${token}"]`).forEach((el: HTMLElement) => {
+      el.dataset['label'] = ` : ${label}`;
+    });
+  }
+
   ngAfterViewInit() {
-    this._cursorPosition.set(this.plainText().length + this.detectedIds().length);
-    document.getSelection()?.collapse(this._elementRef.nativeElement, this._cursorPosition());
+    // Initialize with some content
+    //const initialText = '#123 + #456 * 2 - #789';
+    //this._elementRef.nativeElement.textContent = initialText;
+    // this._cursorPosition.set(initialText.length);
+    this._updateContent();
+    this._restoreCursorPosition();
   }
 
   onInput() {
     this._saveCursorPosition();
-
-    const newText = this._extractPlainText();
-    const oldText = this.plainText();
-
-    // Only trigger re-render if normalized text changed
-    if (newText !== oldText) {
-      this.plainText.set(newText);
-    }
-
+    this._updateContent();
     this._restoreCursorPosition();
   }
 
   onPaste(event: ClipboardEvent) {
-    try {
-      pasteHandler(event);
-
-      // Trigger input event manually
-      this.onInput();
-    } finally {
-      /* empty */
-    }
+    pasteHandler(event);
+    this.onInput();
   }
 
   onKeyDown(event: KeyboardEvent) {
@@ -182,51 +121,18 @@ export class Editor implements AfterViewInit {
     }
   }
 
-  onDragOver(event: DragEvent) {
-    event.preventDefault(); // Allow drop
+  private _updateContent() {
+    const text = this._extractPlainText();
+    // Update DOM directly instead of using innerHTML binding
+    this._elementRef.nativeElement.innerHTML = this.highlightFormula(text);
+
+    // Update signals
+    this.plainText.set(text);
   }
 
-  onDrop(event: DragEvent) {
-    event.preventDefault();
-
-    const droppedText = event.dataTransfer?.getData('text/plain');
-    if (!droppedText) return;
-
-    // Calculate where the drop occurred
-    const caretPosition = document.caretPositionFromPoint(event.clientX, event.clientY);
-    if (!caretPosition) return;
-
-    const walker = document.createTreeWalker(this._elementRef.nativeElement, NodeFilter.SHOW_TEXT);
-
-    let dropPosition = 0;
-    let node = walker.nextNode();
-
-    while (node) {
-      if (node === caretPosition.offsetNode) {
-        dropPosition += caretPosition.offset;
-        break;
-      }
-      dropPosition += node.textContent?.length || 0;
-      node = walker.nextNode();
-    }
-
-    // Get current text and manipulate it
-    let currentText = this._extractPlainText();
-
-    // Remove dragged text from original position
-    const draggedIndex = currentText.indexOf(droppedText);
-    if (draggedIndex !== -1 && draggedIndex < dropPosition) {
-      currentText = currentText.slice(0, draggedIndex) + currentText.slice(draggedIndex + droppedText.length);
-      dropPosition -= droppedText.length;
-    } else if (draggedIndex !== -1) {
-      currentText = currentText.slice(0, draggedIndex) + currentText.slice(draggedIndex + droppedText.length);
-    }
-
-    // Insert at drop position
-    const newText = currentText.slice(0, dropPosition) + droppedText + currentText.slice(dropPosition);
-    this.plainText.set(newText);
-    this._cursorPosition.set(dropPosition + droppedText.length);
-    this._restoreCursorPosition();
+  private highlightFormula(text: string): string {
+    if (!text) return '';
+    return text.replaceAll(/#(\d+)/g, `<span class="id-token" contenteditable data-token="#$1">#$1</span>`);
   }
 
   private _extractPlainText(): string {
@@ -239,63 +145,57 @@ export class Editor implements AfterViewInit {
 
     const range = selection.getRangeAt(0);
 
-    // Calculate absolute position in plain text
-    this._cursorPosition.set(0);
+    // Count characters up to cursor
+    let position = 0;
     const walker = document.createTreeWalker(this._elementRef.nativeElement, NodeFilter.SHOW_TEXT);
 
     let node = walker.nextNode();
     while (node) {
       if (node === range.startContainer) {
-        this._cursorPosition.set(this._cursorPosition() + range.startOffset);
+        position += range.startOffset;
         break;
       }
-      this._cursorPosition.set(this._cursorPosition() + (node.textContent?.length || 0));
+      position += node.textContent?.length || 0;
       node = walker.nextNode();
     }
+
+    this._cursorPosition.set(position);
   }
 
   private _restoreCursorPosition() {
-    // Use setTimeout to wait for DOM update (especially Angular re-renders)
     setTimeout(() => {
       const selection = globalThis.getSelection();
       if (!selection) return;
 
+      let position = 0;
+      const targetPosition = this._cursorPosition();
+
       const walker = document.createTreeWalker(this._elementRef.nativeElement, NodeFilter.SHOW_TEXT);
 
-      let currentPos = 0;
       let node = walker.nextNode();
-      let targetNode = null;
-      let targetOffset = 0;
-
       while (node) {
         const nodeLength = node.textContent?.length || 0;
 
-        if (currentPos + nodeLength >= this._cursorPosition()) {
-          targetNode = node;
-          targetOffset = this._cursorPosition() - currentPos;
-          break;
+        if (position + nodeLength >= targetPosition) {
+          const offset = targetPosition - position;
+          try {
+            const range = document.createRange();
+            const safeOffset = Math.min(offset, nodeLength);
+            range.setStart(node, safeOffset);
+            range.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            return;
+          } catch (e) {
+            console.error('Error restoring cursor:', e);
+          }
         }
 
-        currentPos += nodeLength;
+        position += nodeLength;
         node = walker.nextNode();
       }
 
-      if (targetNode) {
-        try {
-          const range = document.createRange();
-          // Clamp offset to node length to prevent errors
-          const safeOffset = Math.min(targetOffset, targetNode.textContent?.length || 0);
-          range.setStart(targetNode, safeOffset);
-          range.collapse(true);
-          selection.removeAllRanges();
-          selection.addRange(range);
-          return;
-        } catch (e) {
-          console.error('Error restoring cursor:', e);
-        }
-      }
-
-      // Fallback: place cursor at end
+      // Fallback: end of content
       const range = document.createRange();
       range.selectNodeContents(this._elementRef.nativeElement);
       range.collapse(false);
