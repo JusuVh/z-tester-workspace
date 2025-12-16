@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, computed, ElementRef, inject, signal, WritableSignal } from '@angular/core';
+import { Component, computed, ElementRef, inject, input, signal } from '@angular/core';
 import { explicitEffect } from '@datanumia/etincelle/shared';
 
 export function pasteHandler(event: ClipboardEvent) {
@@ -30,6 +30,36 @@ export function keydownHandler(event: KeyboardEvent) {
   if (event.key === 'Enter') {
     event.preventDefault();
   }
+
+  // Allow navigation and editing keys
+  const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab', 'Escape'];
+
+  // Allow Ctrl/Cmd shortcuts (copy, paste, select all, etc.)
+  if (event.ctrlKey || event.metaKey || allowedKeys.includes(event.key)) {
+    return;
+  }
+
+  // Allow: digits, #, math operators, parentheses, and space
+  const allowedChars = /^[0-9#+\-*/() ]$/;
+
+  if (event.key.length === 1 && !allowedChars.test(event.key)) {
+    event.preventDefault();
+  }
+}
+
+/**
+ * Extract only the text nodes in the root Node, in order
+ */
+export function extractTextNodes(rootNode: Node): Array<Node> {
+  const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_TEXT);
+
+  const nodes: Array<Node> = [];
+  let node = walker.nextNode();
+  while (node) {
+    nodes.push(node);
+    node = walker.nextNode();
+  }
+  return nodes;
 }
 
 @Component({
@@ -39,168 +69,169 @@ export function keydownHandler(event: KeyboardEvent) {
   host: {
     class: 'formula-editor',
     '[attr.contenteditable]': '""',
-    '(input)': 'onInput()',
-    '(paste)': 'onPaste($event)',
-    '(click)': 'onClick($event)',
-    '(keydown)': 'onKeyDown($event)',
+    '(input)': '_onInput()',
+    '(paste)': '_onPaste($event)',
+    '(keydown)': '_onKeyDown($event)',
+    '(dragstart)': '_preventAction($event)',
+    '(drop)': '_preventAction($event)',
     '[attr.data-placeholder]': '"Type a formula like: #1 + #2 * 2"',
   },
   exportAs: 'AppEditor',
   imports: [],
 })
-export class Editor implements AfterViewInit {
+export class Editor {
   private readonly _elementRef = inject(ElementRef);
+  private readonly _cursorPosition = signal(0);
+
+  /**
+   * Input formula if already present
+   */
+  formula = input<string>();
 
   plainText = signal('');
 
-  contentArray = computed(() =>
-    this.plainText()
-      .replaceAll(/\s+/g, ' ')
-      .split(/(#\d+)/g)
-      .filter(part => part.length > 0),
-  );
-  detectedIds = computed<Array<string>>(() => this.plainText().match(/#\d+/g) || []);
+  detectedIds = computed<Set<string>>(() => new Set(this.plainText().match(/#\d+/g) || []));
 
-  idLabels: Record<string, WritableSignal<string>> = {};
-
-  private readonly _cursorPosition = signal(0);
+  idLabels: Record<string, string> = {};
 
   constructor() {
     explicitEffect([this.detectedIds], ([ids]) => {
-      ids.forEach(id => {
-        if (!this.idLabels[id]) {
-          this.idLabels[id] = signal('');
-        }
-      });
-
+      // Remove labels from IDs that are not detected anymore
       Object.keys(this.idLabels).forEach(key => {
-        if (!ids.includes(key)) delete this.idLabels[key];
+        if (!ids.has(key)) delete this.idLabels[key];
       });
     });
-  }
 
-  updateLabel(token: string, label: string) {
-    this.idLabels[token].set(label);
-    this._elementRef.nativeElement.querySelectorAll(`[data-token="${token}"]`).forEach((el: HTMLElement) => {
-      el.dataset['label'] = ` : ${label}`;
+    explicitEffect([this.formula], ([inputFormula]) => {
+      if (inputFormula) {
+        this._elementRef.nativeElement.textContent = inputFormula;
+        this._cursorPosition.set(inputFormula.length);
+        this._updateContent();
+        this._restoreCursorPosition();
+      }
     });
   }
 
-  ngAfterViewInit() {
-    // Initialize with some content
-    //const initialText = '#123 + #456 * 2 - #789';
-    //this._elementRef.nativeElement.textContent = initialText;
-    // this._cursorPosition.set(initialText.length);
+  /**
+   * Public API to update token labels
+   */
+  updateLabel(token: string, label: string) {
+    this.idLabels[token] = label;
     this._updateContent();
-    this._restoreCursorPosition();
   }
 
-  onInput() {
+  protected _onInput() {
     this._saveCursorPosition();
     this._updateContent();
     this._restoreCursorPosition();
   }
 
-  onPaste(event: ClipboardEvent) {
+  protected _onPaste(event: ClipboardEvent) {
     pasteHandler(event);
-    this.onInput();
+    this._onInput();
   }
 
-  onKeyDown(event: KeyboardEvent) {
+  protected _onKeyDown(event: KeyboardEvent) {
     keydownHandler(event);
   }
 
-  onClick(event: MouseEvent) {
-    const target = event.target as HTMLElement;
-    if (target.classList.contains('id-token')) {
-      const selection = globalThis.getSelection();
-      const range = document.createRange();
-      range.selectNodeContents(target);
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-    }
+  protected _preventAction(event: Event) {
+    event.preventDefault();
   }
 
+  /**
+   * Re-render all content after any update to formula or labels
+   */
   private _updateContent() {
-    const text = this._extractPlainText();
-    // Update DOM directly instead of using innerHTML binding
-    this._elementRef.nativeElement.innerHTML = this.highlightFormula(text);
-
-    // Update signals
+    const text = (this._elementRef.nativeElement.textContent || '').replaceAll(/\s+/g, ' ');
+    this._elementRef.nativeElement.innerHTML = this._insertTokens(text);
     this.plainText.set(text);
   }
 
-  private highlightFormula(text: string): string {
+  /**
+   * Parse input text and insert <span> in place of each found token
+   */
+  private _insertTokens(text: string): string {
     if (!text) return '';
-    return text.replaceAll(/#(\d+)/g, `<span class="id-token" contenteditable data-token="#$1">#$1</span>`);
+
+    // Replace trailing space with nbsp before highlighting
+    const textWithNbsp = text.replace(/ $/, '\u00A0');
+
+    return textWithNbsp.replaceAll(/#(\d+)/g, (_, id) => {
+      const token = `#${id}`;
+      const label = this.idLabels[token] || '';
+      const labelAttr = label ? ` data-label=" : ${label}"` : '';
+      return `<span class="id-token" contenteditable title="${label}" data-token="${token}"${labelAttr}>${token}</span>`;
+    });
   }
 
-  private _extractPlainText(): string {
-    return (this._elementRef.nativeElement.textContent || '').replaceAll(/\s+/g, ' ');
-  }
-
+  /**
+   * Calculate cursor position as character offset from start
+   */
   private _saveCursorPosition() {
     const selection = globalThis.getSelection();
     if (!selection || selection.rangeCount === 0) return;
 
     const range = selection.getRangeAt(0);
+    const textNodes = extractTextNodes(this._elementRef.nativeElement);
 
-    // Count characters up to cursor
     let position = 0;
-    const walker = document.createTreeWalker(this._elementRef.nativeElement, NodeFilter.SHOW_TEXT);
-
-    let node = walker.nextNode();
-    while (node) {
+    for (const node of textNodes) {
       if (node === range.startContainer) {
         position += range.startOffset;
+        // Position found, exit for loop and save
         break;
       }
       position += node.textContent?.length || 0;
-      node = walker.nextNode();
     }
 
     this._cursorPosition.set(position);
   }
 
+  /**
+   * Restore cursor to saved character position
+   */
   private _restoreCursorPosition() {
     setTimeout(() => {
       const selection = globalThis.getSelection();
       if (!selection) return;
 
-      let position = 0;
       const targetPosition = this._cursorPosition();
+      const textNodes = extractTextNodes(this._elementRef.nativeElement);
 
-      const walker = document.createTreeWalker(this._elementRef.nativeElement, NodeFilter.SHOW_TEXT);
-
-      let node = walker.nextNode();
-      while (node) {
+      let position = 0;
+      for (const node of textNodes) {
         const nodeLength = node.textContent?.length || 0;
 
+        // Check if cursor belongs in this node
         if (position + nodeLength >= targetPosition) {
-          const offset = targetPosition - position;
-          try {
-            const range = document.createRange();
-            const safeOffset = Math.min(offset, nodeLength);
-            range.setStart(node, safeOffset);
-            range.collapse(true);
-            selection.removeAllRanges();
-            selection.addRange(range);
-            return;
-          } catch (e) {
-            console.error('Error restoring cursor:', e);
-          }
+          const offset = Math.min(targetPosition - position, nodeLength);
+
+          const range = document.createRange();
+          range.setStart(node, offset);
+          range.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          // Node found, exit for loop and retur
+          return;
         }
 
         position += nodeLength;
-        node = walker.nextNode();
       }
 
-      // Fallback: end of content
-      const range = document.createRange();
-      range.selectNodeContents(this._elementRef.nativeElement);
-      range.collapse(false);
-      selection.removeAllRanges();
-      selection.addRange(range);
-    }, 0);
+      // Fallback, no Node match target position
+      this._placeCursorAtEnd(selection);
+    });
+  }
+
+  /**
+   * Place cursor at the end of the editor
+   */
+  private _placeCursorAtEnd(selection: Selection) {
+    const range = document.createRange();
+    range.selectNodeContents(this._elementRef.nativeElement);
+    range.collapse(false);
+    selection.removeAllRanges();
+    selection.addRange(range);
   }
 }

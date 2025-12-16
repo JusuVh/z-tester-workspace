@@ -7,22 +7,22 @@
   </etc-card-header-h2>
 
   <div style="display: flex; flex-direction: column; gap: 16px">
-    <app-editor #editor="AppEditor" />
+    <app-editor #editor="AppEditor" [formula]="'(#1 + #2) * 2'" />
 
     <div class="output"><strong>Plain text:</strong> {{ editor.plainText() }}</div>
 
-    @if (editor.detectedIds().length) {
+    @if (editor.detectedIds().size) {
       <hr />
 
       <div style="display: flex; gap: 8px; align-items: center">
         <etc-icon [icon]="eiArticle" style="color: var(--formula-token-border-color)" />
-        <h3>Références ({{ editor.detectedIds().length }})</h3>
+        <h3>Références ({{ editor.detectedIds().size }})</h3>
       </div>
       @for (id of editor.detectedIds(); track id) {
         <div class="reference-card">
           <div class="reference-card__header">
             <div class="id-token reference-card__id-token">{{ id }}</div>
-            <h4>{{ editor.idLabels[id]() }}</h4>
+            <h4>{{ editor.idLabels[id] }}</h4>
           </div>
           <etc-form-field style="width: 250px" hideFeedback>
             <etc-select placeholder="Selectionner un canal" (selectionChange)="editor.updateLabel(id, $any($event).label)">

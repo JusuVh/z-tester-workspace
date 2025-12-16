@@ -1,22 +1,27 @@
 :host {
-  border: 1px solid #ddd;
+  display: inline-flex;
+  align-items: center;
+
+  box-sizing: content-box;
+  outline: none;
+  border: 1px solid var(--etc-sem-color-border-neutral-contrast);
   border-radius: 5px;
   padding: 12px;
-  min-height: 100px;
+  max-height: 52px;
   font-family: 'Courier New', monospace;
   font-size: 14px;
-  line-height: 1.8;
-  white-space: nowrap;
+  line-height: 18px;
+  white-space: pre;
   word-wrap: break-word;
 
   &:focus {
-    outline: none;
     margin: -1px;
-    border: 2px solid #4A90E2;
+    border: 2px solid var(--etc-sem-color-border-brand);
   }
 
   &:empty:before {
     content: attr(data-placeholder);
-    color: #95a5a6;
+    color: var(--etc-sem-color-text-weakest);
+    cursor: text;
   }
 }

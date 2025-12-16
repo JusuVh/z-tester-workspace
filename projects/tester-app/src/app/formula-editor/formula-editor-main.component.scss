@@ -33,10 +33,6 @@
     --formula-token-border-color: #10B981;
     --formula-token-color: #065F46;
 
-    .editor-token {
-      display: inline-block;
-    }
-
     .id-token {
       display: inline-block;
       background-color: var(--formula-token-background-color);
@@ -47,6 +43,10 @@
       margin: 0 2px;
       border: 1px solid var(--formula-token-border-color);
       box-shadow: 0 1px 1px rgba(0,0,0,0.2);
+      max-width: 250px;
+      white-space: nowrap;
+      overflow-x: hidden;
+      text-overflow: ellipsis;
 
       &:after {
         content: attr(data-label);

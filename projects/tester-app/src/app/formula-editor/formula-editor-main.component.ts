@@ -20,8 +20,8 @@ export class FormulaEditorMain {
   protected readonly eiArticle = eiArticle;
 
   options: Array<EtcSearchableOption> = [
-    { value: '1', label: 'Channel 1' },
-    { value: '2', label: 'Channel 2' },
-    { value: '3', label: 'Channel 3' },
+    { value: '1', label: 'Electricité 12345 Conso' },
+    { value: '2', label: 'Général 456 Agrégées Virtuelle' },
+    { value: '3', label: 'Canal 789' },
   ];
 }
