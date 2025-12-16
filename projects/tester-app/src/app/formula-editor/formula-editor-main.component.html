@@ -22,7 +22,7 @@
         <div class="reference-card">
           <div class="reference-card__header">
             <div class="id-token reference-card__id-token">{{ id }}</div>
-            <h4>{{ editor.idLabels[id] }}</h4>
+            <h4>{{ editor.channelsInfo[id]?.label }}</h4>
           </div>
           <etc-form-field style="width: 250px" hideFeedback>
             <etc-select placeholder="Selectionner un canal" (selectionChange)="editor.updateLabel(id, $any($event).label)">

@@ -33,9 +33,14 @@
 
   .token-tooltip {
     --_tooltip-background: var(--etc-sem-color-text-default);
+    --_tooltip-text-color: #FBFBFD;
+
     position: absolute;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
     background-color: var(--_tooltip-background);
-    color: var(--etc-sem-color-text-none);
+    color: var(--_tooltip-text-color);
     padding: 10px;
     border-radius: 5px;
     font-size: var(--etc-prim-font-size-5);
@@ -43,10 +48,10 @@
     white-space: nowrap;
     pointer-events: none;
     z-index: 1000;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 4px 8px rgba(var(--etc-prim-shadow-color), 0.42);
     opacity: 0;
     transform: translateY(2px);
-    transition: opacity 0.2s ease, transform 0.2s ease;
+    transition: opacity 200ms ease, transform 200ms ease;
 
     &.visible {
       opacity: 1;

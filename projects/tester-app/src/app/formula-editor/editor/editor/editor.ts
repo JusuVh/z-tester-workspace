@@ -1,4 +1,5 @@
 import { Component, computed, ElementRef, inject, input, signal, viewChild } from '@angular/core';
+import { eiInfo, EtcIcon } from '@datanumia/etincelle-icons';
 import { explicitEffect } from '@datanumia/etincelle/shared';
 
 export function pasteHandler(event: ClipboardEvent) {
@@ -32,7 +33,7 @@ export function keydownHandler(event: KeyboardEvent) {
   }
 
   // Allow navigation and editing keys
-  const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'Tab', 'Escape'];
+  const allowedKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Escape'];
 
   // Allow Ctrl/Cmd shortcuts (copy, paste, select all, etc.)
   if (event.ctrlKey || event.metaKey || allowedKeys.includes(event.key)) {
@@ -40,7 +41,7 @@ export function keydownHandler(event: KeyboardEvent) {
   }
 
   // Allow: digits, #, math operators, parentheses, and space
-  const allowedChars = /^[0-9#+\-*/() ]$/;
+  const allowedChars = /^[0-9#+\-*/()., ]$/;
 
   if (event.key.length === 1 && !allowedChars.test(event.key)) {
     event.preventDefault();
@@ -74,10 +75,14 @@ export function extractTextNodes(rootNode: Node): Array<Node> {
       (keydown)="_onKeyDown($event)"
       (dragstart)="_preventAction($event)"
       (drop)="_preventAction($event)"
-      [attr.data-placeholder]="'Type a formula like: #1 + #2 * 2'"
+      [attr.data-placeholder]="'Entrez votre formule... (ex. #1 + #2 * 0.5)'"
     ></div>
     <div class="token-tooltip" #tooltip [class.visible]="tooltipVisible()">
-      {{ tooltipContent() }}
+      <b>{{ tooltipContent() }}</b>
+      <div style="display: flex; align-items: center; gap: 4px">
+        <etc-icon [icon]="eiInfo" style="color: var(--etc-sem-color-brand)" size="xs" />
+        Fluide: Exemple
+      </div>
     </div>
   `,
   styleUrl: './editor.scss',
@@ -86,10 +91,12 @@ export function extractTextNodes(rootNode: Node): Array<Node> {
     '(mouseout)': '_onMouseOut($event)',
   },
   exportAs: 'AppEditor',
+  imports: [EtcIcon],
 })
 export class Editor {
   private readonly _elementRef = inject(ElementRef);
   private readonly _cursorPosition = signal(0);
+  protected readonly eiInfo = eiInfo;
 
   private readonly _editorContent = viewChild.required<ElementRef<HTMLElement>>('editorContent');
   private readonly _tooltip = viewChild.required<ElementRef<HTMLElement>>('tooltip');
@@ -103,7 +110,7 @@ export class Editor {
 
   detectedIds = computed<Set<string>>(() => new Set(this.plainText().match(/#\d+/g) || []));
 
-  idLabels: Record<string, string> = {};
+  channelsInfo: Record<string, Partial<{ label: string }>> = {};
 
   // Tooltip state
   tooltipVisible = signal(false);
@@ -111,9 +118,15 @@ export class Editor {
 
   constructor() {
     explicitEffect([this.detectedIds], ([ids]) => {
+      ids.forEach(id => {
+        if (!this.channelsInfo[id]) {
+          this.channelsInfo[id] = {};
+        }
+      });
+
       // Remove labels from IDs that are not detected anymore
-      Object.keys(this.idLabels).forEach(key => {
-        if (!ids.has(key)) delete this.idLabels[key];
+      Object.keys(this.channelsInfo).forEach(key => {
+        if (!ids.has(key)) delete this.channelsInfo[key];
       });
     });
 
@@ -131,7 +144,7 @@ export class Editor {
    * Public API to update token labels
    */
   updateLabel(token: string, label: string) {
-    this.idLabels[token] = label;
+    this.channelsInfo[token].label = label;
     this._updateContent();
   }
 
@@ -147,6 +160,13 @@ export class Editor {
   }
 
   protected _onKeyDown(event: KeyboardEvent) {
+    if (event.key === 'Home' || event.key === 'End') {
+      event.preventDefault();
+      this._cursorPosition.set(event.key === 'Home' ? 0 : Infinity);
+      this._restoreCursorPosition();
+      return;
+    }
+
     keydownHandler(event);
   }
 
@@ -159,12 +179,16 @@ export class Editor {
 
     if (target.classList.contains('id-token')) {
       const token = target.dataset['token'];
-      const label = token ? this.idLabels[token] : '';
+      const label = token ? this.channelsInfo[token].label : '';
 
       if (label) {
         this.tooltipContent.set(label);
         this.tooltipVisible.set(true);
-        this._positionTooltip(target);
+
+        // Wait for browser to paint the new content
+        requestAnimationFrame(() => {
+          this._positionTooltip(target);
+        });
       }
     }
   }
@@ -212,9 +236,9 @@ export class Editor {
 
     return textWithNbsp.replaceAll(/#(\d+)/g, (_, id) => {
       const token = `#${id}`;
-      const label = this.idLabels[token] || '';
+      const label = this.channelsInfo[token]?.label || '';
       const labelAttr = label ? ` data-label=" : ${label}"` : '';
-      return `<span class="id-token" contenteditable title="${label}" data-token="${token}"${labelAttr}>${token}</span>`;
+      return `<span class="id-token" contenteditable data-token="${token}"${labelAttr}>${token}</span>`;
     });
   }
 
