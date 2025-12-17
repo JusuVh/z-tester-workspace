@@ -7,7 +7,7 @@
   </etc-card-header-h2>
 
   <div style="display: flex; flex-direction: column; gap: 16px">
-    <app-editor #editor="AppEditor" [formula]="'(#1 + #2) * 2'" />
+    <app-editor #editor [formula]="'(#1 + #2) * 2'" />
 
     <div class="output"><strong>Plain text:</strong> {{ editor.plainText() }}</div>
 
@@ -22,10 +22,10 @@
         <div class="reference-card">
           <div class="reference-card__header">
             <div class="id-token reference-card__id-token">{{ id }}</div>
-            <h4>{{ editor.channelsInfo[id]?.label }}</h4>
+            <h4>{{ editor.channelsInfo.get(id)?.label }}</h4>
           </div>
           <etc-form-field style="width: 250px" hideFeedback>
-            <etc-select placeholder="Selectionner un canal" (selectionChange)="editor.updateLabel(id, $any($event).label)">
+            <etc-select placeholder="Selectionner un canal" (selectionChange)="editor.updateLabel(id, { label: $any($event).label })">
               @for (opt of options; track opt.value) {
                 <etc-option [value]="opt.label">{{ opt.label }}</etc-option>
               }

@@ -14,7 +14,7 @@ import { Editor } from './editor/editor/editor';
   },
   templateUrl: 'formula-editor-main.component.html',
   styleUrl: 'formula-editor-main.component.scss',
-  imports: [EtcCard, EtcCardHeaderH2, EtcFormFieldModule, EtcPageHeader, Editor, EtcIcon, EtcSelect, EtcOption],
+  imports: [EtcCard, EtcCardHeaderH2, EtcFormFieldModule, EtcPageHeader, Editor, EtcIcon, EtcSelect, EtcOption, Editor],
 })
 export class FormulaEditorMain {
   protected readonly eiArticle = eiArticle;
